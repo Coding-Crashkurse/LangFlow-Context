@@ -6,4 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "langflow>=1.6.9",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
 ]

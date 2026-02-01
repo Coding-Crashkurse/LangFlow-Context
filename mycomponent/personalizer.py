@@ -1,19 +1,24 @@
 from __future__ import annotations
 
 from langflow.custom import Component
-from langflow.io import Output, StrInput
+from langflow.io import MessageInput, Output, StrInput
 from langflow.schema import Data, Message
 
 
 class UsernameContextReader(Component):
-    """Reads username from context and passes it downstream."""
+    """Reads username from context and combines it with incoming message."""
 
     display_name = "Username Context Reader"
-    description = "Reads username from ctx (set by upstream component) and forwards it."
+    description = "Reads username from ctx and combines it with the incoming message."
     icon = "user"
     name = "UsernameContextReader"
 
     inputs = [
+        MessageInput(
+            name="input_message",
+            display_name="Input Message",
+            info="Incoming message to personalize.",
+        ),
         StrInput(
             name="fallback_username",
             display_name="Fallback Username",
@@ -36,22 +41,24 @@ class UsernameContextReader(Component):
     ]
 
     def _get_username(self) -> str:
-        """Read username from ctx with fallback."""
         return self.ctx.get("username", self.fallback_username)
 
     def build_user_data(self) -> Data:
         username = self._get_username()
+        msg_text = self.input_message.text if self.input_message else ""
         self.status = f"User: {username}"
         return Data(
             data={
                 "username": username,
+                "message": msg_text,
                 "from_context": "username" in self.ctx,
             }
         )
 
     def build_user_message(self) -> Message:
         username = self._get_username()
+        msg_text = self.input_message.text if self.input_message else ""
         return Message(
-            text=f"Current user: {username}",
-            sender=self.display_name,
+            text=f"[{username}]: {msg_text}",
+            sender=username,
         )
